@@ -56,68 +56,6 @@ $L1:
 	addiu	$sp,$sp,16
 	j	$31
 	.end	soNguyenTo
-	.align	2
-	.globl	CheckMaxNguyenTo
-	.ent	CheckMaxNguyenTo
-CheckMaxNguyenTo:
-	.frame	$fp,32,$31		# vars= 8, regs= 2/0, args= 16, gp= 0
-	.mask	0xc0000000,-4
-	.fmask	0x00000000,0
-	addiu	$sp,$sp,-32
-	sw	$31,28($sp)
-	sw	$fp,24($sp)
-	move	$fp,$sp
-	sw	$4,32($fp)
-	sw	$5,36($fp)
-	li	$2,-1			# 0xffffffffffffffff
-	sw	$2,16($fp)
-	sw	$0,20($fp)
-	sw	$0,20($fp)
-$L9:
-	lw	$2,20($fp)
-	lw	$3,36($fp)
-	slt	$2,$2,$3
-	beq	$2,$0,$L10
-	lw	$2,20($fp)
-	sll	$3,$2,2
-	lw	$2,32($fp)
-	addu	$2,$3,$2
-	lw	$4,0($2)
-	jal	soNguyenTo
-	move	$4,$2
-	lw	$2,20($fp)
-	sll	$3,$2,2
-	lw	$2,32($fp)
-	addu	$2,$3,$2
-	lw	$2,0($2)
-	bne	$4,$2,$L11
-	lw	$2,20($fp)
-	sll	$3,$2,2
-	lw	$2,32($fp)
-	addu	$2,$3,$2
-	lw	$3,0($2)
-	lw	$2,16($fp)
-	slt	$2,$2,$3
-	beq	$2,$0,$L11
-	lw	$2,20($fp)
-	sll	$3,$2,2
-	lw	$2,32($fp)
-	addu	$2,$3,$2
-	lw	$2,0($2)
-	sw	$2,16($fp)
-$L11:
-	lw	$2,20($fp)
-	addiu	$2,$2,1
-	sw	$2,20($fp)
-	j	$L9
-$L10:
-	lw	$2,16($fp)
-	move	$sp,$fp
-	lw	$31,28($sp)
-	lw	$fp,24($sp)
-	addiu	$sp,$sp,32
-	j	$31
-	.end	CheckMaxNguyenTo
 	.rdata
 	.align	2
 $LC0:
@@ -1126,12 +1064,12 @@ $LC0:
 	.globl	main
 	.ent	main
 main:
-	.frame	$fp,4032,$31		# vars= 4008, regs= 2/0, args= 16, gp= 0
+	.frame	$fp,4040,$31		# vars= 4016, regs= 2/0, args= 16, gp= 0
 	.mask	0xc0000000,-4
 	.fmask	0x00000000,0
-	addiu	$sp,$sp,-4032
-	sw	$31,4028($sp)
-	sw	$fp,4024($sp)
+	addiu	$sp,$sp,-4040
+	sw	$31,4036($sp)
+	sw	$fp,4032($sp)
 	move	$fp,$sp
 	addiu	$2,$fp,16
 	la	$3,$LC0
@@ -1141,14 +1079,52 @@ main:
 	jal	memcpy
 	li	$2,1000			# 0x3e8
 	sw	$2,4016($fp)
-	addiu	$4,$fp,16
-	lw	$5,4016($fp)
-	jal	CheckMaxNguyenTo
+	li	$2,-1			# 0xffffffffffffffff
 	sw	$2,4020($fp)
+	sw	$0,4024($fp)
+	sw	$0,4024($fp)
+$L9:
+	lw	$2,4024($fp)
+	lw	$3,4016($fp)
+	slt	$2,$2,$3
+	beq	$2,$0,$L10
+	lw	$2,4024($fp)
+	sll	$3,$2,2
+	addiu	$2,$fp,16
+	addu	$2,$3,$2
+	lw	$4,0($2)
+	jal	soNguyenTo
+	move	$4,$2
+	lw	$2,4024($fp)
+	sll	$3,$2,2
+	addiu	$2,$fp,16
+	addu	$2,$3,$2
+	lw	$2,0($2)
+	bne	$4,$2,$L11
+	lw	$2,4024($fp)
+	sll	$3,$2,2
+	addiu	$2,$fp,16
+	addu	$2,$3,$2
+	lw	$3,0($2)
+	lw	$2,4020($fp)
+	slt	$2,$2,$3
+	beq	$2,$0,$L11
+	lw	$2,4024($fp)
+	sll	$3,$2,2
+	addiu	$2,$fp,16
+	addu	$2,$3,$2
+	lw	$2,0($2)
+	sw	$2,4020($fp)
+$L11:
+	lw	$2,4024($fp)
+	addiu	$2,$2,1
+	sw	$2,4024($fp)
+	j	$L9
+$L10:
 	move	$2,$0
 	move	$sp,$fp
-	lw	$31,4028($sp)
-	lw	$fp,4024($sp)
-	addiu	$sp,$sp,4032
+	lw	$31,4036($sp)
+	lw	$fp,4032($sp)
+	addiu	$sp,$sp,4040
 	j	$31
 	.end	main
