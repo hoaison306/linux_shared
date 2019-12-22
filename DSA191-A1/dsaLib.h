@@ -68,7 +68,9 @@ public:
 
     int     removeHead();// remove the beginning element of the list
     int     removeLast();// remove the last element of the list
-
+	L1Item<T> *getHead() {
+		return _pHead;
+	}
     void    reverse();
 
 	int findIndex(bool (*pFunc)(const T&, const T&), const T& value) {

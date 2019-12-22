@@ -376,6 +376,7 @@ void LSL_request(TDataset *pData, void *& pOutput, int &N, int lineID) {
 	}
 }
 // # Case sensitive
+// # UTF-8 vs Unicode
 void FC_request(TDataset *pData, void *& pOutput, int &N, std::string inputCityName) {
 	// Find a city with the given name. Return the first city_id if found, -1 otherwise.
 	N = 1;
@@ -396,6 +397,7 @@ void FC_request(TDataset *pData, void *& pOutput, int &N, std::string inputCityN
 	}
 }
 // # Case sensitive
+// UTF-8 vs Unicode
 void FS_request(TDataset *pData, void *& pOutput, int &N, std::string stationName) {
 	// Find a station with the given name. Return the first station_id if found, -1 otherwise.
 	N = 1;
@@ -545,17 +547,16 @@ void RS_request(TDataset *pData, void *&pOutput, int &N, int stationID) {
 	}
 	((int*)pOutput)[0] = 0;
 	stationGeo = pData->station[index].geometry;
-	if (stationID == pData->max_station_id)
-		--pData->max_station_id;
 	pData->station.remove(index);
 	// Delete from station_lines
 	TStation_Line tempSL;
 	tempSL.station_id = stationID;
 	bool(*pTraverseFunc2)(const TStation_Line&, const TStation_Line&);
 	pTraverseFunc2 = &TStationLine_compareStationID;
+	// list contains id of stations to be deleted
 	L1List<int> *listOfStations = pData->station_line.findListOfIndexes(pTraverseFunc2, tempSL);
 		
-	listOfStations->reverse(); // Delete from the tail of list 
+	listOfStations->reverse(); // Delete from the tail of list to avoid id's decrement
 	for (int i = 0; i < listOfStations->getSize(); i++)
 		pData->station_line.remove((*listOfStations)[i]);
 	// Delete from tracks
@@ -566,6 +567,17 @@ void RS_request(TDataset *pData, void *&pOutput, int &N, int stationID) {
 	TTrack tempTrack;
 	tempTrack.geometry = stationGeo;
 	pData->track.compareAndOperate(pTTrack_findCoordinate, pDeleteStationFromTrack, tempTrack);
+	// Update max id if deleted station has the greatest id
+	if (stationID == pData->max_station_id) {
+		L1Item<TStation>* head = pData->station.getHead();
+		int secondGreatestID = 0;
+		while (head != nullptr) {
+			if (head->data.id > secondGreatestID)
+				secondGreatestID = head->data.id;
+			head = head->pNext;
+		}
+		pData->max_station_id = secondGreatestID;
+	}
 }
 // # csv_description format and id updating
 // # update the coordinate in LINESTRING
@@ -574,6 +586,14 @@ void US_request(TDataset *pData, void *& pOutput, int &N, int stationID, std::st
 	N = 1;
 	pOutput = new int[1];
 	// Find number of columns in csv description
+	std::string stationName;
+	stationName = "";
+	if (csv_description.find("\"") != std::string::npos) {
+		int start = csv_description.find("\"");
+		int end = csv_description.find("\"", start + 1);
+		stationName = csv_description.substr(start + 1, end - start - 1);
+		csv_description.erase(start + 1, end - start - 1);
+	}
 	while (csv_description.find(',', pos) != std::string::npos) {
 		pos = csv_description.find(',', pos) + 1;
 		numOfCol++;
@@ -581,7 +601,7 @@ void US_request(TDataset *pData, void *& pOutput, int &N, int stationID, std::st
 	numOfCol++;
 	// Confusing
 	// csv description is not in right format
-	// Assume that there is no id column
+	// Assume that there's no id column
 	if (numOfCol != 6) {
 		((int*)pOutput)[0] = -1;
 		return;
@@ -597,7 +617,7 @@ void US_request(TDataset *pData, void *& pOutput, int &N, int stationID, std::st
 		listOfCol.push_back(col);
 	// name,geometry,buildstart,opening,closure,city_id
 	TStation tempStation;
-	tempStation.name = listOfCol[0];
+	tempStation.name = (stationName == "") ? listOfCol[0] : stationName;
 	if (listOfCol[1] != "" && listOfCol[1].find("POINT(") != std::string::npos && listOfCol[1].find(')') != std::string::npos) {
 		listOfCol[1] = listOfCol[1].substr(listOfCol[1].find('(') + 1, listOfCol[1].length() - 2 - listOfCol[1].find('('));
 		tempStation.geometry = listOfCol[1];
