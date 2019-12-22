@@ -664,9 +664,21 @@ void US_request(TDataset *pData, void *& pOutput, int &N, int stationID, std::st
 
 void ISL_request(TDataset *pData, void *&pOutput, int &N, int stationID, int lineID, int idx)
 {
-	// Find if the stationID is already in the line
 	N = 1;
 	pOutput = new int[1];
+	// Check if station exists or not
+	L1Item<TStation>* head = pData->station.getHead();
+	bool isStationExisting = false;
+	while (head != nullptr) {
+		if (head->data.id == stationID)
+			isStationExisting = true;
+		head = head->pNext;
+	}
+	if (!isStationExisting) {
+		((int*)pOutput)[0] = -1;
+		return;
+	}
+	// Check if the stationID is already in the line
 	bool(*pTStationLine_compare)(const TStation_Line&, const TStation_Line&);
 	pTStationLine_compare = &TStationLine_compare;
 	TStation_Line tempSL;
