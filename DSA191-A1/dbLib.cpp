@@ -179,7 +179,7 @@ void loadLineData(L1List<TLine> &lines) {
 void loadTrackData(L1List<TTrack> &track) {
 	fstream fin;
 	fin.open("tracks.csv", ios::in);
-	std::string line, ele, a = "";
+	std::string line, ele, emptyStr = "";
 	L1List<std::string> col;
 	int numOfCol = 0, pos = 0;
 	// Find number of columns in file
@@ -197,8 +197,12 @@ void loadTrackData(L1List<TTrack> &track) {
 		beginLS = 0, endLS = 0;
 		beginLS = line.find('"');
 		endLS = line.find('"', beginLS + 1);
-		temp.geometry = line.substr(beginLS + 1, endLS - beginLS - 1);
-		line = line.erase(beginLS + 1, endLS - beginLS - 1);
+		if (line.find("EMPTY") != std::string::npos)
+			temp.geometry = "EMPTY";
+		if (beginLS != std::string::npos && endLS != std::string::npos) {
+			temp.geometry = line.substr(beginLS + 1, endLS - beginLS - 1);
+			line = line.erase(beginLS + 1, endLS - beginLS - 1);
+		}
 
 		stringstream str(line);
 		col.clean();
@@ -207,8 +211,11 @@ void loadTrackData(L1List<TTrack> &track) {
 		}
 		// Temporary fix for exception
 		if (col.getSize() < 7)
-			col.push_back(a);
-		temp.geometry = temp.geometry.substr(temp.geometry.find('(') + 1, temp.geometry.length() - temp.geometry.find('(') - 2);
+			col.push_back(emptyStr);
+		if (temp.geometry != "EMPTY")
+			temp.geometry = temp.geometry.substr(temp.geometry.find('(') + 1, temp.geometry.length() - temp.geometry.find('(') - 2);
+		else
+			temp.geometry = "";
 		temp.city_id = (col[col.getSize() - 1] != "") ? stoi(col[col.getSize() - 1]) : -1;
 		temp.id = (col[0] != "") ? stoi(col[0]) : -1;
 		track.push_back(temp);
